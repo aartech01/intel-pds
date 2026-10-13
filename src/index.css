@@ -1,0 +1,101 @@
+@import 'tailwindcss';
+
+/*
+  AarTech Solonics theme - colours taken from the AarTech logo (public/aartechsolonics.avif):
+  navy #070139 ("ink"), red #b30405 ("signal") on white. Token names are kept so every
+  page picks the palette up from here.
+*/
+@theme {
+  --font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Sharp corners everywhere: rounded-sm/lg/xl/... produce no rounding in this theme. */
+  --radius-*: initial;
+
+  /* AarTech navy, darkest to lightest */
+  --color-ink: #070139;
+  --color-ink-2: #0f0a4d;
+  --color-ink-3: #1a155f;
+  --color-ink-4: #2a2573;
+
+  /* Cool whites that sit with the navy */
+  --color-bone: #eceef6;
+  --color-bone-2: #dfe2ef;
+  --color-paper: #f7f8fc;
+  --color-muted: #5d6079;
+
+  /* AarTech red. signal-400 is for red text/icons on navy, where #b30405 is too dark to read. */
+  --color-signal: #b30405;
+  --color-signal-600: #8e0304;
+  --color-signal-400: #ff5c5c;
+  --color-signal-50: #fdeceb;
+  --color-signal-100: #f9d3d2;
+
+  /* Request-type accents */
+  --color-software: #3a6df0;
+  --color-automation: #0e9f86;
+  --color-problem: #e5484d;
+  --color-idea: #f2a000;
+  --color-other: #7c5cff;
+
+  --shadow-card: 0 1px 0 rgb(7 1 57 / 0.04), 0 8px 24px -12px rgb(7 1 57 / 0.2);
+  --shadow-glow: 0 0 0 1px rgb(255 92 92 / 0.35), 0 10px 40px -10px rgb(179 4 5 / 0.7);
+
+  --animate-rise: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-pulse-dot: pulse-dot 2.4s ease-in-out infinite;
+  --animate-logo-drop: logo-drop 0.8s cubic-bezier(0.3, 1.4, 0.5, 1) 0.15s both;
+  --animate-logo-hop: logo-hop 0.55s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+/* Logo spark: drops in on load, hops on hover. */
+@keyframes logo-drop {
+  0% { opacity: 0; transform: translateY(-18px); }
+  55% { opacity: 1; transform: translateY(3px); }
+  75% { transform: translateY(-2px); }
+  100% { transform: none; }
+}
+@keyframes logo-hop {
+  0%, 100% { transform: none; }
+  45% { transform: translateY(-7px); }
+  75% { transform: translateY(1px); }
+}
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(255 92 92 / 0.6); }
+  50% { box-shadow: 0 0 0 10px rgb(255 92 92 / 0); }
+}
+
+@layer base {
+  html { -webkit-tap-highlight-color: transparent; }
+  /* Sharp edges everywhere, including native controls the browser would otherwise round. */
+  input, select, textarea, button { border-radius: 0; }
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+  }
+  ::selection { background: var(--color-signal); color: white; }
+  :focus-visible { outline: 2px solid var(--color-signal); outline-offset: 2px; }
+}
+
+@utility graph-paper {
+  background-image:
+    linear-gradient(rgb(236 238 246 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(236 238 246 / 0.06) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+@utility graph-paper-light {
+  background-image:
+    linear-gradient(rgb(7 1 57 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(7 1 57 / 0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+@utility spark {
+  @apply inline-block size-2.5 bg-signal-400 animate-pulse-dot;
+}
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; }
+}
