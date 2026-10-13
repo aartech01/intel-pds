@@ -30,7 +30,7 @@ export default function Users() {
     [filter],
   );
   useEffect(() => { load(); }, [load]);
-  useLive(['users'], () => load(q));
+  useLive(['users', 'logins'], () => load(q));
 
   const act = async (fn) => {
     setErr('');

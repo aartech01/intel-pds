@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { api } from './api.js';
-import { connectLive, useLive } from './live.js';
+import { connectLive, liveConnected, useLive } from './live.js';
 
 // ---------- public config (types, statuses, limits, branding) ----------
 const ConfigCtx = createContext(null);
@@ -36,8 +36,8 @@ export function AuthProvider({ children }) {
     refresh();
     const onOut = () => setState(EMPTY);
     window.addEventListener('squaddesk:signout', onOut);
-    // Keep the unread badge fresh while the tab is open.
-    const t = setInterval(() => document.visibilityState === 'visible' && refresh(), 60_000);
+    // The live stream keeps the unread badge fresh; poll only while it is down (proxy hiccup, reconnecting).
+    const t = setInterval(() => document.visibilityState === 'visible' && !liveConnected() && refresh(), 60_000);
     return () => {
       window.removeEventListener('squaddesk:signout', onOut);
       clearInterval(t);

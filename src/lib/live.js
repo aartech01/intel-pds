@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { api } from './api.js';
+import { TAB_ID, api, reuseFreshGets } from './api.js';
 
 // Live updates: one Server-Sent Events stream per tab (GET /api/live). The server only says what changed -
 // "pds", "pds:PDS-2026-0007", "slots", "notifications" ... - and pages refetch through the normal API.
@@ -11,12 +11,15 @@ let connectedBefore = false;
 let attempt = 0;
 let retryTimer;
 
-const emit = (topics) => listeners.forEach((l) => l(topics));
+const emit = (topics, own = false) => listeners.forEach((l) => l(topics, own));
+
+/** True while the live stream is open; polling fallbacks can stay quiet. */
+export const liveConnected = () => source?.readyState === EventSource.OPEN;
 
 function open() {
   clearTimeout(retryTimer);
   source?.close();
-  const es = new EventSource('/api/live');
+  const es = new EventSource(`/api/live?tab=${TAB_ID}`);
   source = es;
   es.addEventListener('ready', () => {
     // After a drop (server restart, Wi-Fi) changes may have been missed: every page refetches once.
@@ -26,7 +29,8 @@ function open() {
   });
   es.onmessage = (e) => {
     try {
-      emit(JSON.parse(e.data).topics);
+      const d = JSON.parse(e.data);
+      emit(d.topics, d.own === true);
     } catch {
       // ignore a malformed event
     }
@@ -64,12 +68,18 @@ export function useLive(topics, onChange) {
     const want = key.split(' ');
     let timer;
     let missed = false;
+    let ownOnly = true; // every event since the last run was the echo of this tab's own writes
     const run = () => {
+      const own = ownOnly;
       missed = false;
-      latest.current();
+      ownOnly = true;
+      // The page usually reloaded right after its own write; share that request instead of sending it again.
+      if (own) reuseFreshGets(latest.current);
+      else latest.current();
     };
-    const listener = (got) => {
+    const listener = (got, own) => {
       if (!got.includes('*') && !got.some((t) => want.includes(t))) return;
+      ownOnly &&= own;
       if (document.hidden) {
         missed = true;
         return;
