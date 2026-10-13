@@ -30,7 +30,12 @@ export function AuthProvider({ children }) {
   const [state, setState] = useState({ ...EMPTY, loading: true });
 
   const apply = useCallback((d) => setState({ loading: false, user: d?.user ?? null, mfaPassed: !!d?.mfa_passed, unread: d?.unread ?? 0 }), []);
-  const refresh = useCallback(() => api('/auth/me').then(apply).catch(() => apply(null)), [apply]);
+  // Only the server saying "nobody is logged in" logs the page out. A network blip or the API restarting
+  // (a deploy) keeps the current user; the next check or live reconnect brings the page up to date.
+  const refresh = useCallback(
+    () => api('/auth/me').then(apply).catch((e) => setState((s) => (s.loading || e?.status === 401 ? { ...EMPTY } : s))),
+    [apply],
+  );
 
   useEffect(() => {
     refresh();
