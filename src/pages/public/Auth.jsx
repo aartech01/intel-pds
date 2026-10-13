@@ -98,7 +98,7 @@ export function Start() {
   const src = params.get('src');
   if (src) sessionStorage.setItem(SRC_KEY, src);
   if (loading) return <Spinner className="min-h-dvh" />;
-  return <Navigate to={!user ? '/signup?next=/pds/new' : canSharePds(user) ? '/pds/new' : '/admin'} replace />;
+  return <Navigate to={!user ? '/signup' : canSharePds(user) ? '/dashboard' : '/admin'} replace />;
 }
 
 // ---------- sign up (PRD §7.1) ----------
@@ -107,7 +107,7 @@ export function Signup() {
   const { user, apply } = useAuth();
   const nav = useNavigate();
   const [params] = useSearchParams();
-  const next = params.get('next') || '/pds/new';
+  const next = params.get('next') || '/dashboard';
   const [f, setF] = useState({ full_name: '', display_name: '', cc: '+91', phone: '', email: '', password: '', confirm_password: '', accept_terms: false, remember: true });
   const [displayTouched, setDisplayTouched] = useState(false);
   const [captcha, setCaptcha] = useState('');
