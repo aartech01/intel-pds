@@ -56,6 +56,21 @@ export function api(path, opts = {}) {
   return entry.promise;
 }
 
+/**
+ * GET for pages whose filters can change quickly (search, tabs, paging): only the newest request per `key`
+ * settles. An older answer arriving late is dropped instead of replacing newer results.
+ */
+const latestByKey = new Map();
+const never = new Promise(() => {});
+export function apiLatest(key, path) {
+  const ticket = {};
+  latestByKey.set(key, ticket);
+  return api(path).then(
+    (v) => (latestByKey.get(key) === ticket ? v : never),
+    (e) => (latestByKey.get(key) === ticket ? Promise.reject(e) : never),
+  );
+}
+
 async function request(path, { method = 'GET', body, form, signal, retry = true } = {}) {
   if (method !== 'GET' && !csrf()) await fetch('/api/config'); // first visit: get the CSRF cookie
   const headers = {};

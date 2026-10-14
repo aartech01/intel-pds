@@ -1,9 +1,21 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { KeyRound, Lock, ShieldCheck, Smartphone } from 'lucide-react';
 import { AarTechLogo, Alert, Button, Captcha, Field, Input, Logo, PhoneInput, Spinner, fullPhone, phoneProblem } from '../../components/ui.jsx';
 import { canSharePds, useAuth, useConfig } from '../../lib/context.jsx';
 import { api } from '../../lib/api.js';
+import { adminPages, appPages } from '../../lib/routes.js';
+
+/** While someone types on a login or sign-up page, fetch the code of the page they land on next. */
+function useWarmUp(team = false) {
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const next = team ? [adminPages.Layout, adminPages.Overview] : [appPages.Shell, appPages.Dashboard];
+      next.forEach((load) => load().catch(() => {}));
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [team]);
+}
 
 const SRC_KEY = 'sd_src';
 
@@ -46,8 +58,12 @@ export function AuthShell({ title, subtitle, children, side }) {
 
 // "Skip for now" on the 2FA setup page lasts until the browser tab is closed (only when ALLOW_2FA_SKIP is on).
 const SKIP_2FA_KEY = 'sd_skip_2fa';
-export const twoFactorSkipped = () => sessionStorage.getItem(SKIP_2FA_KEY) === '1';
-export const skipTwoFactor = () => sessionStorage.setItem(SKIP_2FA_KEY, '1');
+// Session storage can be blocked (private mode, strict settings): never let that break a page.
+const readSession = (k) => { try { return sessionStorage.getItem(k); } catch { return null; } };
+const writeSession = (k, v) => { try { sessionStorage.setItem(k, v); } catch { /* no storage */ } };
+
+export const twoFactorSkipped = () => readSession(SKIP_2FA_KEY) === '1';
+export const skipTwoFactor = () => writeSession(SKIP_2FA_KEY, '1');
 
 /** Team console login: a full-screen navy page, so staff never confuse it with the user login. */
 export function TeamAuthShell({ title, subtitle, children, footer }) {
@@ -96,13 +112,14 @@ export function Start() {
   const [params] = useSearchParams();
   const { user, loading } = useAuth();
   const src = params.get('src');
-  if (src) sessionStorage.setItem(SRC_KEY, src);
+  if (src) writeSession(SRC_KEY, src);
   if (loading) return <Spinner className="min-h-dvh" />;
   return <Navigate to={!user ? '/signup' : canSharePds(user) ? '/dashboard' : '/admin'} replace />;
 }
 
 // ---------- sign up (PRD §7.1) ----------
 export function Signup() {
+  useWarmUp();
   const { config } = useConfig();
   const { user, apply } = useAuth();
   const nav = useNavigate();
@@ -135,7 +152,7 @@ export function Signup() {
     setErr('');
     try {
       const { cc, ...rest } = f;
-      const d = await api('/auth/signup', { method: 'POST', body: { ...rest, phone: fullPhone(cc, f.phone), captcha, src: sessionStorage.getItem(SRC_KEY) || undefined } });
+      const d = await api('/auth/signup', { method: 'POST', body: { ...rest, phone: fullPhone(cc, f.phone), captcha, src: readSession(SRC_KEY) || undefined } });
       apply(d);
       nav(afterAuth(d.user, next, config), { replace: true });
     } catch (e2) {
@@ -218,6 +235,7 @@ export function Signup() {
 // ---------- login (AC-03, AC-06, AC-07) ----------
 /** User login (users only), or the team login at /admin/is/login (team accounts only) when `team` is set. */
 export function Login({ team = false }) {
+  useWarmUp(team);
   const { config } = useConfig();
   const { user, apply } = useAuth();
   const nav = useNavigate();

@@ -155,8 +155,88 @@ export function TypeBadge({ type, label }) {
 
 export function Spinner({ className }) {
   return (
-    <div className={cx('flex items-center justify-center py-16 text-muted', className)}>
+    <div role="status" aria-label="Loading" className={cx('flex items-center justify-center py-16 text-muted', className)}>
       <Loader2 className="size-6 animate-spin" />
+    </div>
+  );
+}
+
+// ---------- loading placeholders ----------
+// Page-shaped placeholders instead of a blank spinner: the layout appears at once and does not jump
+// when the data arrives. The pulse stops for reduced-motion users (index.css).
+
+export function Skeleton({ className }) {
+  return <div aria-hidden className={cx('animate-pulse bg-ink/[0.07]', className)} />;
+}
+
+function SkeletonTitle() {
+  return (
+    <div className="mb-6 space-y-2.5">
+      <Skeleton className="h-9 w-72 max-w-[80%]" />
+      <Skeleton className="h-4 w-96 max-w-full" />
+    </div>
+  );
+}
+
+/** Title + a grid of cards (boards, dashboards). */
+export function CardsSkeleton({ cards = 6, title = true }) {
+  return (
+    <div role="status" aria-label="Loading">
+      {title && <SkeletonTitle />}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: cards }, (_, i) => (
+          <div key={i} className="space-y-3 border border-ink/8 bg-white p-5 shadow-card">
+            <div className="flex gap-2">
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-5 w-16" />
+            </div>
+            <Skeleton className="h-5 w-4/5" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Title + a list or table (admin lists, notifications). */
+export function ListSkeleton({ rows = 8, title = true }) {
+  return (
+    <div role="status" aria-label="Loading">
+      {title && <SkeletonTitle />}
+      <div className="divide-y divide-ink/6 border border-ink/8 bg-white shadow-card">
+        {Array.from({ length: rows }, (_, i) => (
+          <div key={i} className="flex items-center gap-4 px-4 py-3.5">
+            <Skeleton className="h-4 w-24 shrink-0" />
+            <Skeleton className="h-4 flex-1" />
+            <Skeleton className="hidden h-5 w-20 shrink-0 sm:block" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Title + a main column and a side column (detail pages, forms). */
+export function DetailSkeleton() {
+  return (
+    <div role="status" aria-label="Loading">
+      <SkeletonTitle />
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="space-y-4 border border-ink/8 bg-white p-6 shadow-card">
+          <Skeleton className="h-5 w-1/3" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="mt-6 h-24 w-full" />
+        </div>
+        <div className="space-y-3 border border-ink/8 bg-white p-6 shadow-card">
+          <Skeleton className="h-5 w-1/2" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+      </div>
     </div>
   );
 }
@@ -185,29 +265,43 @@ export function Alert({ kind = 'error', children }) {
  * Popup rendered straight into <body>: an animated or blurred parent (page fade-in, sticky header)
  * would otherwise become the box `fixed` is measured from, pushing the popup off-centre.
  */
+let modalSeq = 0;
 export function Modal({ open, onClose, title, children, wide }) {
+  // Callers usually pass an inline onClose; keep it in a ref so the effect runs only on open/close.
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  const box = useRef(null);
+  const [titleId] = useState(() => `modal-title-${++modalSeq}`);
   useEffect(() => {
     if (!open) return;
-    const onKey = (e) => e.key === 'Escape' && onClose();
+    const before = document.activeElement;
+    const onKey = (e) => e.key === 'Escape' && closeRef.current();
     window.addEventListener('keydown', onKey);
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    // Move keyboard focus into the popup (unless a field inside already took it with autoFocus),
+    // and give it back to the button that opened it on close.
+    if (box.current && !box.current.contains(document.activeElement)) box.current.focus({ preventScroll: true });
     return () => {
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = overflow;
+      if (before?.isConnected) before.focus?.({ preventScroll: true });
     };
-  }, [open, onClose]);
+  }, [open]);
   if (!open) return null;
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4 backdrop-blur-sm sm:p-6" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4 sm:p-6 sm:backdrop-blur-sm" onMouseDown={() => closeRef.current()}>
       <div
+        ref={box}
         role="dialog"
         aria-modal="true"
-        className={cx('max-h-[calc(100dvh-2rem)] w-full overflow-auto bg-white p-6 shadow-2xl animate-rise', wide ? 'max-w-2xl' : 'max-w-md')}
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className={cx('max-h-[calc(100dvh-2rem)] w-full overflow-auto overscroll-contain bg-white p-6 shadow-2xl animate-rise focus:outline-none', wide ? 'max-w-2xl' : 'max-w-md')}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between gap-4">
-          <h2 className="text-lg font-bold">{title}</h2>
+          <h2 id={titleId} className="text-lg font-bold">{title}</h2>
           <button onClick={onClose} className="p-1.5 hover:bg-bone" aria-label="Close">
             <X className="size-5" />
           </button>
@@ -418,7 +512,7 @@ export function Toggle({ checked, onChange, label }) {
       onClick={() => onChange(!checked)}
       className={cx('relative h-6 w-11 shrink-0 transition', checked ? 'bg-automation' : 'bg-ink/20')}
     >
-      <span className={cx('absolute top-0.5 size-5 bg-white shadow transition-all', checked ? 'left-[22px]' : 'left-0.5')} />
+      <span className={cx('absolute left-0.5 top-0.5 size-5 bg-white shadow transition-transform', checked && 'translate-x-5')} />
     </button>
   );
 }

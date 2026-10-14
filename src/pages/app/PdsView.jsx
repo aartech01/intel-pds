@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowBigUp, ArrowLeft, CalendarClock, Check, CircleCheck, FileText, Globe2, Lock, MessageCircleQuestion, Pencil, Send, Star, Trash2, Undo2, XCircle,
 } from 'lucide-react';
-import { Alert, Button, Card, Field, Modal, RichText, Spinner, Textarea, cx } from '../../components/ui.jsx';
+import { Alert, Button, Card, DetailSkeleton, Field, Modal, RichText, Textarea, cx } from '../../components/ui.jsx';
 import { PdsStatus, PdsType, PrivateTag } from '../../components/pds.jsx';
 import { Comments } from '../../components/comments.jsx';
 import { api } from '../../lib/api.js';
@@ -22,12 +22,18 @@ export default function PdsView() {
   const load = useCallback(() => api(`/pds/${code}`).then(setD).catch((e) => { setErr(e.message); if (e.status === 404) setD(null); }), [code]);
   useEffect(() => { load(); }, [load]);
   useLive([`pds:${code}`, 'slots'], load);
+  // Jump to a linked comment once - not again on every live refresh while the reader scrolls.
+  const scrolledTo = useRef('');
+  const ready = !!d;
   useEffect(() => {
-    if (d && loc.hash) setTimeout(() => document.getElementById(loc.hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
-  }, [d, loc.hash]);
+    if (!ready || !loc.hash || scrolledTo.current === loc.hash) return;
+    scrolledTo.current = loc.hash;
+    const t = setTimeout(() => document.getElementById(loc.hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+    return () => clearTimeout(t);
+  }, [ready, loc.hash]);
 
   if (err && !d) return <Card className="p-8 text-center"><p className="font-semibold">{err}</p><Link to="/community" className="mt-3 inline-block text-signal-600 hover:underline">Back to the community board</Link></Card>;
-  if (!d) return <Spinner />;
+  if (!d) return <DetailSkeleton />;
   const { pds: p, can } = d;
   const mine = p.is_mine;
 
@@ -42,7 +48,19 @@ export default function PdsView() {
     }
   };
 
-  const upvote = () => run(() => api(`/pds/${code}/upvote`, { method: d.upvoted ? 'DELETE' : 'POST' }));
+  // Instant feedback: flip the vote on screen first, then confirm with the server (undo on failure).
+  const upvote = async () => {
+    const was = d.upvoted;
+    setErr('');
+    setD((x) => ({ ...x, upvoted: !was, pds: { ...x.pds, upvotes: x.pds.upvotes + (was ? -1 : 1) } }));
+    try {
+      const r = await api(`/pds/${code}/upvote`, { method: was ? 'DELETE' : 'POST' });
+      setD((x) => ({ ...x, upvoted: r.upvoted, pds: { ...x.pds, upvotes: r.upvotes } }));
+    } catch (e) {
+      setErr(e.message);
+      load();
+    }
+  };
   const toggleVisibility = () => run(() => api(`/pds/${code}`, { method: 'PATCH', body: { visibility: p.visibility === 'public' ? 'private' : 'public' } }));
 
   return (
@@ -127,7 +145,7 @@ export default function PdsView() {
                   {d.attachments.map((a) => (
                     <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="group block border border-ink/10 bg-paper">
                       {a.file_type.startsWith('image/') ? (
-                        <img src={a.url} alt={a.file_name} className="aspect-video w-full object-cover" loading="lazy" />
+                        <img src={a.url} alt={a.file_name} className="aspect-video w-full object-cover" loading="lazy" decoding="async" />
                       ) : (
                         <div className="grid aspect-video place-items-center"><FileText className="size-8 text-muted" /></div>
                       )}

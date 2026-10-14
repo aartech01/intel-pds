@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, CalendarCheck, Check, ExternalLink, FileText, Hammer, ListChecks, Lock, Mail, MessageCircleQuestion, PackageCheck, Phone, Plus, SearchCheck, StickyNote, ThumbsUp, Trash2, TrendingUp, XCircle,
 } from 'lucide-react';
-import { Alert, Button, Card, ConfirmModal, Field, Input, Modal, RichText, Select, Spinner, Textarea, cx } from '../../components/ui.jsx';
+import { Alert, Button, Card, ConfirmModal, DetailSkeleton, Field, Input, Modal, RichText, Select, Spinner, Textarea, cx } from '../../components/ui.jsx';
 import { PdsStatus, PdsType, PrivateTag } from '../../components/pds.jsx';
 import { Comments } from '../../components/comments.jsx';
 import { api } from '../../lib/api.js';
@@ -21,7 +21,7 @@ export default function PdsAdmin() {
   useEffect(() => { load(); }, [load]);
   useLive([`pds:${code}`, 'slots'], load);
 
-  if (!d) return err ? <Alert>{err}</Alert> : <Spinner />;
+  if (!d) return err ? <Alert>{err}</Alert> : <DetailSkeleton />;
   const { pds: p, owner, can } = d;
 
   const run = async (fn) => {
@@ -391,7 +391,7 @@ function NotesCard({ notes, code, reload }) {
         {notes.map((n) => (
           <li key={n.id} className="bg-idea/8 px-3 py-2 text-sm">
             <RichText text={n.text} />
-            <p className="mt-1 text-xs text-muted">{n.by_name} · {timeAgo(n.created_at)}</p>
+            <p className="mt-1 text-xs text-muted">{n.by_name ?? 'Automation'} · {timeAgo(n.created_at)}</p>
           </li>
         ))}
       </ul>

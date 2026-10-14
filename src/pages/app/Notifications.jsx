@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, CalendarClock, CheckCheck, MessageSquare, ShieldAlert, TrendingUp, UserCheck } from 'lucide-react';
-import { Button, Card, Empty, Spinner, cx } from '../../components/ui.jsx';
+import { Button, Card, Empty, ListSkeleton, cx } from '../../components/ui.jsx';
 import { api } from '../../lib/api.js';
 import { useAuth } from '../../lib/context.jsx';
 import { timeAgo } from '../../lib/format.js';
@@ -23,7 +23,7 @@ export default function Notifications() {
   };
   const open = (n) => !n.read_at && api('/me/notifications/read', { method: 'POST', body: { ids: [n.id] } }).then(refresh);
 
-  if (!rows) return <Spinner />;
+  if (!rows) return <ListSkeleton />;
   return (
     <div className="mx-auto max-w-3xl animate-rise">
       <PageTitle title="Notifications">

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, Users, X } from 'lucide-react';
-import { Alert, Button, Card, Empty, Input, Select, Spinner, cx } from '../../components/ui.jsx';
+import { Alert, Button, Card, CardsSkeleton, Empty, Input, Select, cx } from '../../components/ui.jsx';
 import { PdsCard } from '../../components/pds.jsx';
-import { api } from '../../lib/api.js';
+import { api, apiLatest } from '../../lib/api.js';
 import { useAuth, useConfig } from '../../lib/context.jsx';
 import { PageTitle } from './Shell.jsx';
 import { useLive } from '../../lib/live.js';
@@ -21,7 +21,7 @@ export default function Community() {
 
   const load = useCallback(() => {
     setErr('');
-    api(`/board?${params}`).then(setData).catch((e) => setErr(e.message));
+    apiLatest('board', `/board?${params}`).then(setData).catch((e) => setErr(e.message));
   }, [params]);
   useEffect(() => { load(); }, [load]);
   useLive(['pds'], load);
@@ -34,14 +34,19 @@ export default function Community() {
     setParams(n, { replace: true });
   };
 
-  const upvote = async (p) => {
+  // Instant feedback: flip the vote on the card first, then confirm with the server (undo on failure).
+  const patchRow = useCallback((code, fn) => setData((d) => d && { ...d, rows: d.rows.map((x) => (x.code === code ? { ...x, ...fn(x) } : x)) }), []);
+  const upvote = useCallback(async (p) => {
+    const was = !!p.upvoted;
+    patchRow(p.code, (x) => ({ upvoted: !was, upvotes: x.upvotes + (was ? -1 : 1) }));
     try {
-      const r = await api(`/pds/${p.code}/upvote`, { method: p.upvoted ? 'DELETE' : 'POST' });
-      setData((d) => ({ ...d, rows: d.rows.map((x) => (x.code === p.code ? { ...x, upvotes: r.upvotes, upvoted: r.upvoted } : x)) }));
+      const r = await api(`/pds/${p.code}/upvote`, { method: was ? 'DELETE' : 'POST' });
+      patchRow(p.code, () => ({ upvotes: r.upvotes, upvoted: r.upvoted }));
     } catch (e) {
+      patchRow(p.code, (x) => ({ upvoted: was, upvotes: x.upvotes + (was ? 1 : -1) }));
       setErr(e.message);
     }
-  };
+  }, [patchRow]);
 
   const type = params.get('type') ?? '';
   const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
@@ -96,7 +101,7 @@ export default function Community() {
       </div>
 
       {!data ? (
-        <Spinner />
+        <div className="mt-6"><CardsSkeleton title={false} /></div>
       ) : !data.rows.length ? (
         <Card className="mt-6">
           <Empty icon={Users} title="No PDS match">Try a different keyword or filter.</Empty>

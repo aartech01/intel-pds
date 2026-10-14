@@ -35,6 +35,16 @@ logger.error = (msg, opts) => {
 export default defineConfig({
   customLogger: logger,
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      output: {
+        // React + router change rarely: a separate file stays cached in browsers across our deploys.
+        manualChunks(id) {
+          if (/node_modules[\/](react|react-dom|scheduler|react-router|react-router-dom)[\/]/.test(id)) return 'react';
+        },
+      },
+    },
+  },
   server: {
     port: 5180,
     strictPort: true,

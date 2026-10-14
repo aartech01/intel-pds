@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, KeyRound, Laptop, LogOut, Mail, ShieldCheck, Smartphone, Trash2, UserRound } from 'lucide-react';
-import { Alert, Button, Card, Field, Input, Modal, OtpInput, PhoneInput, Spinner, fullPhone, phoneProblem } from '../../components/ui.jsx';
+import { Alert, Button, Card, DetailSkeleton, Field, Input, Modal, OtpInput, PhoneInput, Spinner, fullPhone, phoneProblem } from '../../components/ui.jsx';
 import { api, downloadFile } from '../../lib/api.js';
 import { useAuth, useConfig } from '../../lib/context.jsx';
 import { timeAgo } from '../../lib/format.js';
@@ -23,7 +23,7 @@ function Section({ icon: Icon, title, subtitle, children }) {
 export default function Profile() {
   const { user, apply } = useAuth();
   const { config } = useConfig();
-  if (!user) return <Spinner />;
+  if (!user) return <DetailSkeleton />;
   return (
     <div className="mx-auto max-w-3xl animate-rise space-y-6">
       <PageTitle title="Profile & security" subtitle={`Signed in as ${user.display_name} · ${config?.roles?.[user.role] ?? user.role}`} />

@@ -4,29 +4,31 @@ import Landing from './pages/public/Landing.jsx';
 import { Forgot, Login, SetPassword, Signup, Start } from './pages/public/Auth.jsx';
 import { Privacy, Terms } from './pages/public/Legal.jsx';
 import { Spinner } from './components/ui.jsx';
+import { adminPages, appPages } from './lib/routes.js';
 
 // The logged-in app and the team panel are code-split, so a phone opening the QR link
-// downloads only the landing and sign-up code (PRD §15: under 2 s on 4G).
-const AppShell = lazy(() => import('./pages/app/Shell.jsx'));
-const Dashboard = lazy(() => import('./pages/app/Dashboard.jsx'));
-const Community = lazy(() => import('./pages/app/Community.jsx'));
-const PdsForm = lazy(() => import('./pages/app/PdsForm.jsx'));
-const PdsView = lazy(() => import('./pages/app/PdsView.jsx'));
-const MyPds = lazy(() => import('./pages/app/MyPds.jsx'));
-const Notifications = lazy(() => import('./pages/app/Notifications.jsx'));
-const Profile = lazy(() => import('./pages/app/Profile.jsx'));
+// downloads only the landing and sign-up code (PRD §15: under 2 s on 4G). Once inside,
+// the shells prefetch the rest of their pages in the background (lib/routes.js).
+const AppShell = lazy(appPages.Shell);
+const Dashboard = lazy(appPages.Dashboard);
+const Community = lazy(appPages.Community);
+const PdsForm = lazy(appPages.PdsForm);
+const PdsView = lazy(appPages.PdsView);
+const MyPds = lazy(appPages.MyPds);
+const Notifications = lazy(appPages.Notifications);
+const Profile = lazy(appPages.Profile);
 
-const AdminLayout = lazy(() => import('./pages/admin/Layout.jsx'));
-const SetupTwoFactor = lazy(() => import('./pages/admin/Layout.jsx').then((m) => ({ default: m.SetupTwoFactor })));
-const Overview = lazy(() => import('./pages/admin/Overview.jsx'));
-const PdsList = lazy(() => import('./pages/admin/PdsList.jsx'));
-const PdsAdmin = lazy(() => import('./pages/admin/PdsAdmin.jsx'));
-const Slots = lazy(() => import('./pages/admin/Slots.jsx'));
-const Moderation = lazy(() => import('./pages/admin/Moderation.jsx'));
-const Users = lazy(() => import('./pages/admin/Users.jsx'));
-const QrCodes = lazy(() => import('./pages/admin/QrCodes.jsx'));
-const Audit = lazy(() => import('./pages/admin/Audit.jsx'));
-const Settings = lazy(() => import('./pages/admin/Settings.jsx'));
+const AdminLayout = lazy(adminPages.Layout);
+const SetupTwoFactor = lazy(() => adminPages.Layout().then((m) => ({ default: m.SetupTwoFactor })));
+const Overview = lazy(adminPages.Overview);
+const PdsList = lazy(adminPages.PdsList);
+const PdsAdmin = lazy(adminPages.PdsAdmin);
+const Slots = lazy(adminPages.Slots);
+const Moderation = lazy(adminPages.Moderation);
+const Users = lazy(adminPages.Users);
+const QrCodes = lazy(adminPages.QrCodes);
+const Audit = lazy(adminPages.Audit);
+const Settings = lazy(adminPages.Settings);
 
 export default function App() {
   return (

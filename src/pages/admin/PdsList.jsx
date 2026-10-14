@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowBigUp, Download, FileStack, Lock, MessageSquare, Search, Trash2 } from 'lucide-react';
 import { PageHeader, isAdmin } from './Layout.jsx';
-import { Alert, Button, Card, ConfirmModal, Empty, Input, Select, Spinner, cx } from '../../components/ui.jsx';
+import { Alert, Button, Card, ConfirmModal, Empty, Input, ListSkeleton, Select, cx } from '../../components/ui.jsx';
 import { PdsStatus, PdsType } from '../../components/pds.jsx';
-import { api, downloadFile } from '../../lib/api.js';
+import { api, apiLatest, downloadFile } from '../../lib/api.js';
 import { useAuth, useConfig } from '../../lib/context.jsx';
 import { fmtDate } from '../../lib/format.js';
 import { useLive } from '../../lib/live.js';
@@ -31,7 +31,7 @@ export default function PdsList() {
   const [del, setDel] = useState(null); // row to delete
 
   const load = useCallback(() => {
-    api(`/admin/pds?${params}`).then(setData).catch((e) => setErr(e.message));
+    apiLatest('admin-pds', `/admin/pds?${params}`).then(setData).catch((e) => setErr(e.message));
   }, [params]);
   useEffect(() => { load(); }, [load]);
   useLive(['pds'], load);
@@ -102,7 +102,7 @@ export default function PdsList() {
       <div className="mt-3"><Alert>{err}</Alert></div>
 
       {!data ? (
-        <Spinner />
+        <ListSkeleton title={false} />
       ) : !data.rows.length ? (
         <Card className="mt-4"><Empty icon={FileStack} title="No requests here" /></Card>
       ) : (

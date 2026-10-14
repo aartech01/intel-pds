@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertCircle, ArrowRight, CalendarRange, ChevronDown, FolderKanban, Hammer, Plus, ShieldCheck, Users } from 'lucide-react';
-import { Card, Empty, Spinner } from '../../components/ui.jsx';
+import { Card, CardsSkeleton, Empty } from '../../components/ui.jsx';
 import { PdsCard, PdsStatus, SectionTitle } from '../../components/pds.jsx';
 import { SlotCalendar, SlotLegend } from '../../components/slots.jsx';
 import { api } from '../../lib/api.js';
@@ -34,7 +34,7 @@ export default function Dashboard() {
   useLive(['pds', 'slots', 'notifications'], load);
 
   if (err) return <p className="text-problem">{err}</p>;
-  if (!d) return <Spinner />;
+  if (!d) return <CardsSkeleton />;
   const todo = d.mine.filter(actionFor);
   const upNext = d.up_next.filter((q) => q.code).slice(0, 3);
 
@@ -119,7 +119,7 @@ export default function Dashboard() {
                 <span className="text-sm font-bold text-signal-600">{n.progress}%</span>
               </div>
               <div className="mt-2 h-2 bg-ink/8">
-                <div className="h-full bg-signal transition-all" style={{ width: `${n.progress}%` }} />
+                <div className="h-full bg-signal transition-[width] duration-500" style={{ width: `${n.progress}%` }} />
               </div>
             </div>
           ))}
@@ -163,7 +163,7 @@ export default function Dashboard() {
             <Card><Empty icon={Users} title="No public PDS yet">Be the first to share one.</Empty></Card>
           )
         ) : (
-          <Spinner />
+          <CardsSkeleton cards={3} title={false} />
         )}
       </section>
     </div>

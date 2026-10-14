@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Bell, FolderKanban, LayoutDashboard, LogOut, Plus, ShieldCheck, User, Users } from 'lucide-react';
-import { AarTechLogo, Avatar, Logo, Spinner, cx } from '../../components/ui.jsx';
+import { AarTechLogo, Avatar, CardsSkeleton, Logo, Spinner, cx } from '../../components/ui.jsx';
 import { canSharePds, useAuth } from '../../lib/context.jsx';
+import { prefetchApp } from '../../lib/routes.js';
 
 export function RequireUser({ children }) {
   const { user, loading } = useAuth();
@@ -25,6 +26,7 @@ export default function AppShell() {
   const loc = useLocation();
   const menuRef = useRef(null);
   useEffect(() => setMenu(false), [loc.pathname]);
+  useEffect(() => { if (user) prefetchApp(); }, [user]);
   useEffect(() => {
     if (!menu) return;
     const close = (e) => !menuRef.current?.contains(e.target) && setMenu(false);
@@ -35,7 +37,7 @@ export default function AppShell() {
   return (
     <RequireUser>
       <div className="min-h-dvh bg-paper pb-20 lg:pb-0">
-        <header className="sticky top-0 z-30 border-b border-ink/8 bg-paper/90 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-ink/8 bg-paper sm:bg-paper/90 sm:backdrop-blur">
           <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:px-6">
             <Link to="/dashboard" aria-label="Dashboard" className="mr-4">
               <Logo compact="xs" />
@@ -88,7 +90,10 @@ export default function AppShell() {
 
 
         <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-10">
-          <Outlet />
+          {/* Only the page area waits for a page's code; the header and tab bar stay put. */}
+          <Suspense fallback={<CardsSkeleton />}>
+            <Outlet />
+          </Suspense>
         </main>
 
         {/* Phone tab bar */}

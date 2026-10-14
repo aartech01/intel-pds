@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Check, Copy, Download, Plus, Printer, QrCode, Trash2 } from 'lucide-react';
 import { PageHeader } from './Layout.jsx';
-import { Alert, Button, Card, Empty, Input, Modal, Spinner, Toggle, cx } from '../../components/ui.jsx';
+import { Alert, Button, Card, CardsSkeleton, Empty, Input, Modal, Toggle, cx } from '../../components/ui.jsx';
 import { api, downloadFile } from '../../lib/api.js';
 import { useConfig } from '../../lib/context.jsx';
 import { useLive } from '../../lib/live.js';
@@ -76,7 +76,7 @@ export default function QrCodes() {
       <Alert>{err}</Alert>
 
       {!rows ? (
-        <Spinner />
+        <CardsSkeleton title={false} />
       ) : !rows.length ? (
         <Card><Empty icon={QrCode} title="No QR codes yet">Create one for each poster, card or event.</Empty></Card>
       ) : (
@@ -84,7 +84,7 @@ export default function QrCodes() {
           {rows.map((q) => (
             <Card key={q.id} className={cx('overflow-hidden', !q.is_active && 'opacity-70')}>
               <div className="relative grid place-items-center bg-paper p-6">
-                <img src={img(q.id)} alt={`QR code for ${q.label}`} className={cx('size-44 bg-white p-2 shadow-sm', !q.is_active && 'grayscale')} />
+                <img src={img(q.id)} alt={`QR code for ${q.label}`} width="176" height="176" loading="lazy" decoding="async" className={cx('size-44 bg-white p-2 shadow-sm', !q.is_active && 'grayscale')} />
                 {!q.is_active && <span className="absolute right-3 top-3 bg-ink px-2.5 py-1 text-xs font-semibold text-bone">Paused</span>}
               </div>
               <div className="p-4">
@@ -165,7 +165,7 @@ h1{font-size:44pt;line-height:1.02;margin:8mm 0 0;font-weight:900}h1 span{color:
         </p>
         <p className="mt-2 text-xs text-bone/60">Scan, sign up and write a short PDS.</p>
         <div className="mx-auto mt-6 w-fit bg-white p-3 ring-4 ring-signal">
-          <img src={img(q.id)} alt="" className="size-36" />
+          <img src={img(q.id)} alt="" width="144" height="144" decoding="async" className="size-36" />
         </div>
         <p className="mt-6 text-[10px] text-bone/50">IntelSquad · {q.label}</p>
       </div>

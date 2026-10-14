@@ -5,6 +5,10 @@ import App from './App.jsx';
 import { AuthProvider, ConfigProvider } from './lib/context.jsx';
 import './index.css';
 
+// Web fonts were fetched without blocking the first paint (index.html); apply them now.
+const fonts = document.getElementById('fonts');
+if (fonts) fonts.media = 'all';
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Ban, KeyRound, LockKeyhole, MessageSquareWarning, Search, ShieldCheck, Trash2, Users as UsersIcon } from 'lucide-react';
 import { PageHeader } from './Layout.jsx';
-import { Alert, Button, Card, ConfirmModal, Empty, Input, Modal, Select, Spinner, Textarea, cx } from '../../components/ui.jsx';
-import { api } from '../../lib/api.js';
+import { Alert, Button, Card, ConfirmModal, Empty, Input, ListSkeleton, Modal, Select, Textarea, cx } from '../../components/ui.jsx';
+import { api, apiLatest } from '../../lib/api.js';
 import { useAuth, useConfig } from '../../lib/context.jsx';
 import { timeAgo } from '../../lib/format.js';
 import { useLive } from '../../lib/live.js';
@@ -24,7 +24,7 @@ export default function Users() {
   const load = useCallback(
     (search = q) => {
       const p = new URLSearchParams({ q: search, ...(filter.role ? { role: filter.role } : {}), ...(filter.blocked ? { blocked: '1' } : {}) });
-      api(`/admin/users?${p}`).then(setRows).catch((e) => setErr(e.message));
+      apiLatest('admin-users', `/admin/users?${p}`).then(setRows).catch((e) => setErr(e.message));
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [filter],
@@ -64,7 +64,7 @@ export default function Users() {
       <div className="mt-3"><Alert>{err}</Alert></div>
 
       {!rows ? (
-        <Spinner />
+        <ListSkeleton title={false} />
       ) : !rows.length ? (
         <Card className="mt-4"><Empty icon={UsersIcon} title="No users found" /></Card>
       ) : (

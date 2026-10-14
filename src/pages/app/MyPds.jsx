@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowBigUp, ArrowRight, FolderKanban, MessageSquare, Plus } from 'lucide-react';
-import { Card, Empty, Spinner, Tabs } from '../../components/ui.jsx';
+import { Card, Empty, ListSkeleton, Tabs } from '../../components/ui.jsx';
 import { PdsStatus, PdsType, PrivateTag } from '../../components/pds.jsx';
 import { api } from '../../lib/api.js';
 import { canSharePds, useAuth, useConfig } from '../../lib/context.jsx';
@@ -24,7 +24,7 @@ export default function MyPds() {
   const load = () => api('/dashboard').then((d) => setRows(d.mine));
   useEffect(() => { load(); }, []);
   useLive(['pds'], load);
-  if (!rows) return <Spinner />;
+  if (!rows) return <ListSkeleton />;
   const open = rows.filter((p) => GROUPS.active(p.status)).length;
   const list = rows.filter((p) => GROUPS[tab](p.status));
 

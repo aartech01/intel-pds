@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, BarChart3, CheckCircle2, ChevronDown, Clock, Flag, Hammer, Inbox, ScanLine, SearchCheck, Star, Users } from 'lucide-react';
 import { PageHeader } from './Layout.jsx';
-import { Card, Spinner, cx } from '../../components/ui.jsx';
+import { Card, CardsSkeleton, cx } from '../../components/ui.jsx';
 import { PdsStatus } from '../../components/pds.jsx';
 import { api } from '../../lib/api.js';
 import { timeAgo } from '../../lib/format.js';
@@ -16,7 +16,7 @@ export default function Overview() {
   useEffect(() => { load(); }, []);
   useLive(['pds', 'slots', 'moderation', 'users'], load);
   if (err) return <p className="text-problem">{err}</p>;
-  if (!d) return <Spinner />;
+  if (!d) return <CardsSkeleton />;
   const { cards, slots, metrics } = d;
 
   const tiles = [

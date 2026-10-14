@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { AlertTriangle, ArrowLeft, ChevronDown, Eye, FileText, Globe2, ImageIcon, Lightbulb, Lock, Paperclip, Send, Trash2, X } from 'lucide-react';
-import { Alert, Button, Card, Counter, Field, Input, Spinner, Textarea, TYPE_ICONS, cx } from '../../components/ui.jsx';
-import { api } from '../../lib/api.js';
+import { Alert, Button, Card, Counter, DetailSkeleton, Field, Input, TYPE_ICONS, Textarea, cx } from '../../components/ui.jsx';
+import { api, apiLatest } from '../../lib/api.js';
 import { canSharePds, useAuth, useConfig } from '../../lib/context.jsx';
 import { TYPE_STYLE, fmtBytes } from '../../lib/format.js';
 import { PageTitle } from './Shell.jsx';
@@ -46,16 +46,26 @@ export default function PdsForm() {
       .catch((e) => setErr(e.message));
   }, [code, editing]);
 
-  // Local safety net for a new PDS (in case the tab closes).
+  // Local safety net for a new PDS (in case the tab closes). Saved shortly after typing stops, and at once
+  // when the tab is hidden or closed. Storage can be unavailable (private mode, full): the form still works.
+  const latestForm = useRef(f);
+  latestForm.current = f;
   useEffect(() => {
-    if (!editing) localStorage.setItem(LOCAL_KEY, JSON.stringify(f));
+    if (editing) return;
+    const save = () => { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(latestForm.current)); } catch { /* no storage */ } };
+    const t = setTimeout(save, 400);
+    window.addEventListener('pagehide', save);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('pagehide', save);
+    };
   }, [f, editing]);
 
   // Similar public PDS while typing (so people can comment there instead).
   useEffect(() => {
     const text = `${f.title} ${f.problem_statement}`.trim();
     if (editing || text.length < 12) return setSimilar([]);
-    const t = setTimeout(() => api(`/pds-similar?q=${encodeURIComponent(text.slice(0, 300))}`).then(setSimilar).catch(() => {}), 600);
+    const t = setTimeout(() => apiLatest('similar', `/pds-similar?q=${encodeURIComponent(text.slice(0, 300))}`).then(setSimilar).catch(() => {}), 600);
     return () => clearTimeout(t);
   }, [f.title, f.problem_statement, editing]);
 
@@ -92,7 +102,7 @@ export default function PdsForm() {
         for (const file of files) form.append('files', file);
         const r = await api('/pds', { method: 'POST', form });
         target = r.code;
-        localStorage.removeItem(LOCAL_KEY);
+        try { localStorage.removeItem(LOCAL_KEY); } catch { /* no storage */ }
       } else {
         await api(`/pds/${code}`, { method: 'PATCH', body: f });
         if (action === 'submit' && status === 'draft') await api(`/pds/${code}/submit`, { method: 'POST' });
@@ -136,7 +146,7 @@ export default function PdsForm() {
 
   if (!editing && !canSharePds(user)) return <Navigate to="/admin" replace />;
   if (loaded === 'locked') return <Navigate to={`/pds/${code}`} replace />;
-  if (!loaded) return err ? <Alert>{err}</Alert> : <Spinner />;
+  if (!loaded) return err ? <Alert>{err}</Alert> : <DetailSkeleton />;
 
   return (
     <div className="mx-auto max-w-3xl animate-rise">
@@ -336,7 +346,7 @@ export default function PdsForm() {
 
         <Alert>{err}</Alert>
 
-        <div className="sticky bottom-20 z-10 flex flex-col-reverse gap-2 rounded-xl border border-ink/8 bg-white/95 p-3 shadow-card backdrop-blur sm:flex-row sm:items-center lg:bottom-4">
+        <div className="sticky bottom-20 z-10 flex flex-col-reverse gap-2 rounded-xl border border-ink/8 bg-white p-3 shadow-card sm:bg-white/95 sm:backdrop-blur sm:flex-row sm:items-center lg:bottom-4">
           <p className="text-sm text-muted sm:mr-auto">
             <b className="text-ink">{required} of 4</b> required answers done
           </p>

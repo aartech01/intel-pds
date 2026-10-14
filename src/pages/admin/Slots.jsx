@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Info, ListOrdered, Settings2 } from 'lucide-react';
 import { PageHeader, isAdmin } from './Layout.jsx';
-import { Alert, Button, Card, Field, Input, Modal, Select, Spinner, Textarea } from '../../components/ui.jsx';
+import { Alert, Button, Card, DetailSkeleton, Field, Input, Modal, Select, Textarea } from '../../components/ui.jsx';
 import { SlotCalendar, SlotLegend } from '../../components/slots.jsx';
-import { api } from '../../lib/api.js';
+import { api, apiLatest } from '../../lib/api.js';
 import { useAuth } from '../../lib/context.jsx';
 import { fmtDate, fmtWeekRange, teamName, weekName } from '../../lib/format.js';
 import { useLive } from '../../lib/live.js';
@@ -26,7 +26,7 @@ export default function Slots() {
   const [boost, setBoost] = useState(null);
 
   const load = useCallback(() => {
-    api(`/admin/slots?weeks=8${from ? `&from=${from}` : ''}`)
+    apiLatest('admin-slots', `/admin/slots?weeks=8${from ? `&from=${from}` : ''}`)
       .then((x) => {
         setD(x);
         setCap((c) => c ?? { parallel_slots: x.capacity.parallel_slots, hours_per_week: x.capacity.hours_per_week });
@@ -36,7 +36,7 @@ export default function Slots() {
   useEffect(() => { load(); }, [load]);
   useLive(['slots', 'pds'], load);
 
-  if (!d) return err ? <Alert>{err}</Alert> : <Spinner />;
+  if (!d) return err ? <Alert>{err}</Alert> : <DetailSkeleton />;
   const start = from ?? d.current_week;
 
   const act = async (fn) => {

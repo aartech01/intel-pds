@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowBigUp, CalendarClock, Lock, MessageSquare } from 'lucide-react';
 import { StatusBadge, TypeBadge, cx } from './ui.jsx';
@@ -21,7 +22,8 @@ export const PrivateTag = () => (
 );
 
 /** Community board card (CD-01): title, type, short problem, display name, date, status, comments, upvotes. */
-export function PdsCard({ p, onUpvote, to = `/pds/${p.code}` }) {
+// memo: a vote or a live refresh re-renders only the cards whose data changed.
+export const PdsCard = memo(function PdsCard({ p, onUpvote, to = `/pds/${p.code}` }) {
   return (
     <article className="group flex h-full flex-col border border-ink/8 bg-white p-5 shadow-card transition hover:-translate-y-0.5 hover:border-ink/20">
       <div className="flex flex-wrap items-center gap-2">
@@ -71,7 +73,7 @@ export function PdsCard({ p, onUpvote, to = `/pds/${p.code}` }) {
       </div>
     </article>
   );
-}
+});
 
 export function SectionTitle({ icon: Icon, title, subtitle, action, className }) {
   return (

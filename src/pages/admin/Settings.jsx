@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { PageHeader } from './Layout.jsx';
-import { Alert, Button, Card, Field, Input, Spinner, Textarea } from '../../components/ui.jsx';
+import { Alert, Button, Card, DetailSkeleton, Field, Input, Textarea } from '../../components/ui.jsx';
 import { api } from '../../lib/api.js';
 import { useAuth, useConfig } from '../../lib/context.jsx';
 
@@ -13,7 +13,7 @@ export default function Settings() {
   useEffect(() => {
     api('/admin/settings').then(setS).catch((e) => setMsg({ kind: 'error', text: e.message }));
   }, []);
-  if (!s) return msg ? <Alert>{msg.text}</Alert> : <Spinner />;
+  if (!s) return msg ? <Alert>{msg.text}</Alert> : <DetailSkeleton />;
   const set = (k) => (e) => setS({ ...s, [k]: e.target.value });
   const save = async (e) => {
     e.preventDefault();

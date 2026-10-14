@@ -69,7 +69,8 @@
 }
 
 @layer base {
-  html { -webkit-tap-highlight-color: transparent; }
+  /* scrollbar-gutter: the page no longer shifts sideways when a popup locks scrolling. */
+  html { -webkit-tap-highlight-color: transparent; scrollbar-gutter: stable; text-size-adjust: 100%; }
   /* Sharp edges everywhere, including native controls the browser would otherwise round. */
   input, select, textarea, button { border-radius: 0; }
   body {
@@ -93,6 +94,16 @@
 }
 @utility spark {
   @apply inline-block size-2.5 bg-signal-400 animate-pulse-dot;
+}
+
+/* Visitors who ask their device for less motion get none: no fade-ins, pulses, hops or smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @media print {

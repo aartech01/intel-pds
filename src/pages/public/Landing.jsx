@@ -12,7 +12,7 @@ export function PublicShell({ children, dark = false }) {
   const { user } = useAuth();
   return (
     <div className={cx('min-h-dvh', dark ? 'bg-ink text-bone' : 'bg-paper')}>
-      <header className={cx('sticky top-0 z-30 border-b backdrop-blur', dark ? 'border-bone/10 bg-ink/80' : 'border-ink/8 bg-paper/85')}>
+      <header className={cx('sticky top-0 z-30 border-b sm:backdrop-blur', dark ? 'border-bone/10 bg-ink sm:bg-ink/80' : 'border-ink/8 bg-paper sm:bg-paper/85')}>
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link to="/" aria-label="IntelSquad home">
             <Logo dark={dark} compact />

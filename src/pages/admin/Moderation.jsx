@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Ban, Check, EyeOff, Flag, Trash2 } from 'lucide-react';
 import { PageHeader } from './Layout.jsx';
-import { Alert, Button, Card, Empty, Input, Modal, RichText, Spinner } from '../../components/ui.jsx';
+import { Alert, Button, Card, Empty, Input, ListSkeleton, Modal, RichText } from '../../components/ui.jsx';
 import { api } from '../../lib/api.js';
 import { timeAgo } from '../../lib/format.js';
 import { useLive } from '../../lib/live.js';
@@ -27,7 +27,7 @@ export default function Moderation() {
       setErr(e.message);
     }
   };
-  if (!d) return err ? <Alert>{err}</Alert> : <Spinner />;
+  if (!d) return err ? <Alert>{err}</Alert> : <ListSkeleton />;
 
   return (
     <div className="animate-rise">

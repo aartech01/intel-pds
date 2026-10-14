@@ -23,7 +23,8 @@ export function Comments({ code, comments, onChange, can, staff = false, onReloa
       {can.comment && <Composer code={code} max={max} types={config?.comment_types ?? []} onPosted={onChange} className="mt-4" />}
       <ol className="mt-6 space-y-5">
         {comments.map((c) => (
-          <li key={c.id}>
+          // Long threads: the browser skips layout and paint for comments that are off screen.
+          <li key={c.id} className="[contain-intrinsic-size:auto_140px] [content-visibility:auto]">
             <Comment c={c} code={code} max={max} can={can} staff={staff} onChange={onChange} onReload={onReload} onRequirement={onRequirement} types={config?.comment_types ?? []} />
           </li>
         ))}

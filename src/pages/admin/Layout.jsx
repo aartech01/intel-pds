@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CalendarRange, FileStack, Flag, LayoutDashboard, LogOut, Menu, QrCode, ScrollText, Settings, ShieldCheck, Users, X } from 'lucide-react';
-import { AarTechLogo, Alert, Logo, Spinner, cx } from '../../components/ui.jsx';
+import { AarTechLogo, Alert, ListSkeleton, Logo, Spinner, cx } from '../../components/ui.jsx';
 import { useAuth, useConfig } from '../../lib/context.jsx';
+import { prefetchAdmin } from '../../lib/routes.js';
 import { AuthShell, skipTwoFactor, twoFactorSkipped } from '../public/Auth.jsx';
 import { MfaSetup, TeamRuleOff } from '../app/Profile.jsx';
 
@@ -98,6 +99,7 @@ export default function AdminLayout() {
   const loc = useLocation();
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [loc.pathname]);
+  useEffect(() => { if (!gate) prefetchAdmin(); }, [gate]);
   if (gate) return gate;
 
   // Everyday pages first; rarely used tools are grouped under "More".
@@ -173,7 +175,7 @@ export default function AdminLayout() {
           <aside className="absolute inset-y-0 left-0 w-72 animate-rise">{sidebar}</aside>
         </div>
       )}
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-ink/8 bg-paper/90 px-4 backdrop-blur sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-ink/8 bg-paper px-4 sm:bg-paper/90 sm:px-6 sm:backdrop-blur lg:px-8">
         <button onClick={() => setOpen(true)} className="rounded-lg p-1.5 hover:bg-ink/5 lg:hidden" aria-label="Open menu">
           <Menu className="size-5" />
         </button>
@@ -183,7 +185,10 @@ export default function AdminLayout() {
         <AarTechLogo className="ml-auto h-10 border border-ink/8" />
       </header>
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <Outlet />
+        {/* Only the page area waits for a page's code; the sidebar and header stay put. */}
+        <Suspense fallback={<ListSkeleton />}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );

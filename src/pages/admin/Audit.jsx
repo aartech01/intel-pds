@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ScrollText, Search, User } from 'lucide-react';
 import { PageHeader } from './Layout.jsx';
-import { Alert, Button, Card, Empty, Input, Select, Spinner } from '../../components/ui.jsx';
-import { api } from '../../lib/api.js';
+import { Alert, Button, Card, Empty, Input, ListSkeleton, Select } from '../../components/ui.jsx';
+import { apiLatest } from '../../lib/api.js';
 import { fmtDate } from '../../lib/format.js';
 import { useLive } from '../../lib/live.js';
 
@@ -24,7 +24,7 @@ export default function Audit() {
     const q = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
     if (action) q.set('action', action);
     if (actor) q.set('actor', actor);
-    return api(`/admin/audit?${q}`).then((d) => { setData(d); setErr(''); }).catch((e) => setErr(e.message));
+    return apiLatest('admin-audit', `/admin/audit?${q}`).then((d) => { setData(d); setErr(''); }).catch((e) => setErr(e.message));
   }, [page, pageSize, action, actor]);
   useEffect(() => { load(); }, [load]);
   useLive(['audit'], load);
@@ -70,7 +70,7 @@ export default function Audit() {
       </form>
       <div className="mt-3"><Alert>{err}</Alert></div>
       {!rows ? (
-        <Spinner />
+        <ListSkeleton title={false} />
       ) : !rows.length ? (
         <Card className="mt-4"><Empty icon={ScrollText} title={filtered ? 'No entries match this filter' : 'Nothing logged'} /></Card>
       ) : (
